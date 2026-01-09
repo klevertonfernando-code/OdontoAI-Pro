@@ -22,8 +22,13 @@ export const Settings: React.FC<SettingsProps> = ({
     const [profileForm, setProfileForm] = useState(clinicProfile);
     const [activeTab, setActiveTab] = useState<'profile' | 'users'>('profile');
     
-    // New User Form
-    const [newUser, setNewUser] = useState({ name: '', role: 'DOCTOR' as UserRole, email: '', pin: '' });
+    // New User Form State
+    const [newUser, setNewUser] = useState({ 
+        name: '', 
+        role: 'DOCTOR' as UserRole, 
+        email: '', 
+        pin: '' 
+    });
     const [newUserAvatar, setNewUserAvatar] = useState<string>('');
 
     const handleSaveProfile = () => {
@@ -36,14 +41,21 @@ export const Settings: React.FC<SettingsProps> = ({
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setNewUserAvatar(reader.result as string);
+                // TYPE SAFETY FIX: Ensure result is a string
+                if (reader.result && typeof reader.result === 'string') {
+                    setNewUserAvatar(reader.result);
+                }
             };
             reader.readAsDataURL(file);
         }
     };
 
     const handleCreateUser = () => {
-        if (!newUser.name || !newUser.pin) return;
+        if (!newUser.name || !newUser.pin) {
+            alert("Nome e PIN são obrigatórios.");
+            return;
+        }
+
         const user: User = {
             id: Date.now().toString(),
             name: newUser.name,
@@ -52,10 +64,13 @@ export const Settings: React.FC<SettingsProps> = ({
             pin: newUser.pin,
             avatar: newUserAvatar || `https://ui-avatars.com/api/?name=${newUser.name}&background=random`
         };
+
         onAddUser(user);
-        setNewUser({ name: '', role: 'DOCTOR', email: '', pin: '' });
+        
+        // Reset form
+        setNewUser({ name: '', role: 'DOCTOR' as UserRole, email: '', pin: '' });
         setNewUserAvatar('');
-        alert(`Usuário ${newUser.name} criado e integrado ao sistema central.`);
+        alert(`Usuário ${newUser.name} criado com sucesso.`);
     };
 
     if (currentUserRole !== 'ADMIN') {
@@ -166,7 +181,7 @@ export const Settings: React.FC<SettingsProps> = ({
                                         type="file" 
                                         accept="image/*" 
                                         onChange={handleAvatarChange} 
-                                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
                                         title="Clique para enviar uma foto"
                                     />
                                 </div>

@@ -133,7 +133,7 @@ export const Odontogram: React.FC<OdontogramProps> = ({ value = [], onChange, re
 
 // Helper components
 const getFaceName = (face: string) => {
-    const map: any = { occlusal: 'Oclusal/Incisal', vestibular: 'Vestibular', lingual: 'Lingual/Palatal', mesial: 'Mesial', distal: 'Distal' };
+    const map: Record<string, string> = { occlusal: 'Oclusal/Incisal', vestibular: 'Vestibular', lingual: 'Lingual/Palatal', mesial: 'Mesial', distal: 'Distal' };
     return map[face] || face;
 }
 
@@ -149,7 +149,13 @@ const getStatusColor = (status: ToothStatus) => {
     }
 };
 
-const ComplexTooth = ({ id, data, onFaceClick }: { id: number, data: Tooth, onFaceClick: (face: keyof ToothFaces | 'whole') => void }) => {
+interface ComplexToothProps {
+  id: number;
+  data: Tooth;
+  onFaceClick: (face: keyof ToothFaces | 'whole') => void;
+}
+
+const ComplexTooth: React.FC<ComplexToothProps> = ({ id, data, onFaceClick }) => {
     // Styling layout for a tooth divided into 5 faces (Cross shape)
     // CSS Grid: 3x3
     // . V .
@@ -194,14 +200,25 @@ const ComplexTooth = ({ id, data, onFaceClick }: { id: number, data: Tooth, onFa
     );
 };
 
-const ActionBtn = ({ status, label, onClick }: any) => (
+interface ActionBtnProps {
+    status: ToothStatus;
+    label: string;
+    onClick: () => void;
+}
+
+const ActionBtn: React.FC<ActionBtnProps> = ({ status, label, onClick }) => (
     <button onClick={onClick} className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-bold border transition-colors ${getStatusColor(status).replace('bg-', 'text-').replace('hover:', '')} border-current bg-white hover:bg-gray-50`}>
         <div className={`w-3 h-3 rounded-full ${getStatusColor(status)}`}></div>
         {label}
     </button>
 );
 
-const LegendItem = ({ color, label }: any) => (
+interface LegendItemProps {
+    color: string;
+    label: string;
+}
+
+const LegendItem: React.FC<LegendItemProps> = ({ color, label }) => (
     <div className="flex items-center gap-1">
         <div className={`w-3 h-3 rounded-full ${color}`}></div>
         <span>{label}</span>

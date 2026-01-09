@@ -4,7 +4,7 @@ import { Appointment, Patient, ViewType, Notification, ClinicProfile } from '../
 
 interface AgendaProps {
     patients: Patient[];
-    appointments: Appointment[]; // Lifted state
+    appointments: Appointment[]; 
     onAddAppointment: (apt: Appointment) => void;
     onUpdateAppointment: (apt: Appointment) => void;
     onNavigate: (view: ViewType) => void;
@@ -41,18 +41,6 @@ export const Agenda: React.FC<AgendaProps> = ({
 
     const filteredAppointments = appointments.filter(a => a.date === selectedDateStr).sort((a,b) => a.time.localeCompare(b.time));
 
-    const getStatusColor = (status: string) => {
-        switch(status) {
-            case 'confirmed': return 'bg-green-100 text-green-700 border-green-200';
-            case 'waiting': return 'bg-yellow-100 text-yellow-700 border-yellow-200 animate-pulse';
-            case 'in_service': return 'bg-blue-100 text-blue-700 border-blue-200';
-            case 'scheduled': return 'bg-gray-100 text-gray-700 border-gray-200';
-            case 'completed': return 'bg-gray-200 text-gray-500 border-gray-300';
-            case 'canceled': return 'bg-red-50 text-red-400 border-red-100';
-            default: return 'bg-gray-50';
-        }
-    };
-
     const handlePatientSearch = (term: string) => {
         setSearchTerm(term);
         if (term.length > 0) {
@@ -78,7 +66,6 @@ export const Agenda: React.FC<AgendaProps> = ({
 
         onAddAppointment(appointment);
         setShowModal(false);
-        // Reset form
         setNewApt({ time: '09:00', procedure: '' });
         setSearchTerm('');
         setNewPatientName('');
@@ -88,7 +75,6 @@ export const Agenda: React.FC<AgendaProps> = ({
 
     const handleArrived = (apt: Appointment) => {
         onUpdateAppointment({ ...apt, status: 'waiting' });
-        
         onAddNotification({
             id: Date.now().toString(),
             title: 'Paciente Chegou',
@@ -119,8 +105,8 @@ export const Agenda: React.FC<AgendaProps> = ({
     };
 
     return (
-        <div className="space-y-6 animate-fadeIn h-full flex flex-col">
-            <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="space-y-6 animate-fadeIn pb-10">
+            <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Agenda Clínica</h2>
                     <p className="text-gray-500 capitalize">{formattedDate}</p>
@@ -128,7 +114,7 @@ export const Agenda: React.FC<AgendaProps> = ({
                 <div className="flex gap-2">
                     <button 
                         onClick={() => setShowModal(true)}
-                        className="px-4 py-2 bg-cobalt text-white rounded-lg hover:bg-blue-800 shadow-lg shadow-cobalt/20 flex items-center gap-2"
+                        className="px-6 py-2 bg-cobalt text-white rounded-lg hover:bg-blue-800 shadow-lg shadow-cobalt/20 flex items-center gap-2 font-bold"
                     >
                         <i className="fa-solid fa-plus"></i> Novo
                     </button>
@@ -136,62 +122,62 @@ export const Agenda: React.FC<AgendaProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {/* Calendar Widget */}
-                <Card className="h-fit">
-                    <div className="text-center mb-4">
-                        <h3 className="font-bold text-lg text-gray-700 capitalize">{new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(selectedDate)}</h3>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => <span key={d} className="font-bold text-gray-400 py-2">{d}</span>)}
-                        {Array.from({length: 30}).map((_, i) => (
-                            <button 
-                                key={i} 
-                                onClick={() => setSelectedDate(new Date(2024, selectedDate.getMonth(), i+1))}
-                                className={`py-2 rounded-lg hover:bg-blue-50 ${i+1 === selectedDate.getDate() ? 'bg-cobalt text-white shadow-lg shadow-cobalt/30' : 'text-gray-700'}`}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
-                    </div>
-                </Card>
+                <div className="h-fit">
+                    <Card>
+                        <div className="text-center mb-6 border-b pb-4">
+                            <h3 className="font-bold text-xl text-gray-800 capitalize">{new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(selectedDate)}</h3>
+                        </div>
+                        <div className="grid grid-cols-7 gap-2 text-center text-sm">
+                            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => <span key={d} className="font-bold text-gray-400 py-2">{d}</span>)}
+                            {Array.from({length: 30}).map((_, i) => (
+                                <button 
+                                    key={i} 
+                                    onClick={() => setSelectedDate(new Date(2024, selectedDate.getMonth(), i+1))}
+                                    className={`py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium ${i+1 === selectedDate.getDate() ? 'bg-cobalt text-white shadow-lg shadow-cobalt/30' : 'text-gray-700'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
 
                 {/* Appointments List */}
                 <div className="lg:col-span-2 space-y-4">
                     {filteredAppointments.map((apt) => (
-                        <div key={apt.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex justify-between items-center group relative overflow-hidden">
+                        <div key={apt.id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex justify-between items-center group relative overflow-hidden">
                             {/* Status Indicator Bar */}
                             <div className={`absolute left-0 top-0 bottom-0 w-1 ${apt.status === 'waiting' ? 'bg-yellow-400' : apt.status === 'confirmed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                             
-                            <div className="flex items-center gap-6 pl-2">
+                            <div className="flex items-center gap-6 pl-4">
                                 <div className="text-center w-16">
-                                    <p className="text-xl font-bold text-gray-800">{apt.time}</p>
-                                    <p className="text-xs text-gray-500">Horário</p>
+                                    <p className="text-2xl font-bold text-gray-800">{apt.time}</p>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wider">Horário</p>
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-lg text-gray-800">{apt.patientName}</h4>
-                                    <p className="text-gray-500 text-sm">{apt.procedure}</p>
-                                    {apt.status === 'waiting' && <span className="text-xs text-yellow-600 font-bold bg-yellow-50 px-2 py-0.5 rounded-full">Na Recepção</span>}
+                                    <p className="text-gray-600">{apt.procedure}</p>
+                                    {apt.status === 'waiting' && <span className="text-xs text-yellow-600 font-bold bg-yellow-50 px-2 py-0.5 rounded-full inline-block mt-1">Na Recepção</span>}
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4">
-                                {/* Receptionist Action: Mark Arrival */}
                                 {(isReceptionist || !isReceptionist) && apt.status === 'scheduled' && (
                                     <button 
                                         onClick={() => handleArrived(apt)}
-                                        className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg text-sm font-bold hover:bg-yellow-200"
+                                        className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-200 transition-colors"
                                     >
                                         <i className="fa-solid fa-bell mr-1"></i> Chegou
                                     </button>
                                 )}
 
-                                {/* Doctor Action: Open Record */}
                                 {!isReceptionist && (
                                     <button 
                                         onClick={() => onNavigate(ViewType.PATIENT_RECORDS)} 
-                                        className="w-10 h-10 rounded-full bg-blue-50 text-cobalt hover:bg-cobalt hover:text-white flex items-center justify-center transition-colors" 
+                                        className="w-12 h-12 rounded-full bg-blue-50 text-cobalt hover:bg-cobalt hover:text-white flex items-center justify-center transition-colors text-lg" 
                                         title="Abrir Prontuário"
                                     >
                                         <i className="fa-solid fa-folder-open"></i>
@@ -201,9 +187,9 @@ export const Agenda: React.FC<AgendaProps> = ({
                         </div>
                     ))}
                     {filteredAppointments.length === 0 && (
-                         <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                            <i className="fa-solid fa-calendar-xmark text-4xl mb-4"></i>
-                            <p>Sem consultas para este dia.</p>
+                         <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                            <i className="fa-solid fa-calendar-xmark text-4xl mb-4 text-gray-300"></i>
+                            <p className="text-lg">Sem consultas para este dia.</p>
                         </div>
                     )}
                 </div>
@@ -250,11 +236,6 @@ export const Agenda: React.FC<AgendaProps> = ({
                                     </td>
                                 </tr>
                             ))}
-                            {filteredAppointments.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="p-8 text-center text-gray-400 italic">Sem atendimentos agendados.</td>
-                                </tr>
-                            )}
                         </tbody>
                     </table>
                  </div>
@@ -263,17 +244,16 @@ export const Agenda: React.FC<AgendaProps> = ({
             {/* Schedule Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scaleIn">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">Novo Agendamento</h3>
+                    <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl animate-scaleIn">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-6">Novo Agendamento</h3>
                         
-                        <div className="space-y-4">
-                            {/* Patient Search / New */}
+                        <div className="space-y-5">
                             <div>
-                                <div className="flex justify-between mb-1">
-                                    <label className="text-sm font-bold text-gray-600">Paciente</label>
+                                <div className="flex justify-between mb-2">
+                                    <label className="text-sm font-bold text-gray-700">Paciente</label>
                                     <button 
                                         onClick={() => setIsNewPatient(!isNewPatient)} 
-                                        className="text-xs text-cobalt underline"
+                                        className="text-xs text-cobalt font-bold hover:underline"
                                     >
                                         {isNewPatient ? "Buscar Existente" : "Cadastrar Novo"}
                                     </button>
@@ -282,7 +262,7 @@ export const Agenda: React.FC<AgendaProps> = ({
                                     <input 
                                         type="text" 
                                         placeholder="Nome do Novo Paciente"
-                                        className="w-full p-2 border rounded-lg"
+                                        className="w-full p-3 border rounded-xl focus:border-cobalt outline-none"
                                         value={newPatientName}
                                         onChange={(e) => setNewPatientName(e.target.value)}
                                     />
@@ -291,14 +271,14 @@ export const Agenda: React.FC<AgendaProps> = ({
                                         <input 
                                             type="text" 
                                             placeholder="Buscar por nome..."
-                                            className="w-full p-2 border rounded-lg pr-8"
+                                            className="w-full p-3 border rounded-xl pr-10 focus:border-cobalt outline-none"
                                             value={searchTerm}
                                             onChange={(e) => handlePatientSearch(e.target.value)}
                                         />
-                                        <i className="fa-solid fa-search absolute right-3 top-3 text-gray-400"></i>
+                                        <i className="fa-solid fa-search absolute right-3 top-3.5 text-gray-400"></i>
                                         {selectedPatient && (
-                                            <div className="mt-1 text-xs text-green-600 font-bold bg-green-50 p-1 rounded">
-                                                <i className="fa-solid fa-check mr-1"></i> Selecionado: {selectedPatient.name}
+                                            <div className="mt-2 text-xs text-green-700 font-bold bg-green-50 p-2 rounded-lg border border-green-100 flex items-center gap-2">
+                                                <i className="fa-solid fa-check-circle"></i> Selecionado: {selectedPatient.name}
                                             </div>
                                         )}
                                     </div>
@@ -307,14 +287,14 @@ export const Agenda: React.FC<AgendaProps> = ({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1">Data</label>
-                                    <input type="text" disabled value={selectedDate.toLocaleDateString('pt-BR')} className="w-full p-2 bg-gray-100 rounded-lg text-gray-500" />
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Data</label>
+                                    <input type="text" disabled value={selectedDate.toLocaleDateString('pt-BR')} className="w-full p-3 bg-gray-50 rounded-xl text-gray-500 border border-gray-200" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1">Hora</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Hora</label>
                                     <input 
                                         type="time" 
-                                        className="w-full p-2 border rounded-lg"
+                                        className="w-full p-3 border rounded-xl focus:border-cobalt outline-none"
                                         value={newApt.time}
                                         onChange={(e) => setNewApt({...newApt, time: e.target.value})}
                                     />
@@ -322,20 +302,20 @@ export const Agenda: React.FC<AgendaProps> = ({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-600 mb-1">Procedimento</label>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Procedimento</label>
                                 <input 
                                     type="text" 
                                     placeholder="Ex: Restauração, Limpeza..."
-                                    className="w-full p-2 border rounded-lg"
+                                    className="w-full p-3 border rounded-xl focus:border-cobalt outline-none"
                                     value={newApt.procedure}
                                     onChange={(e) => setNewApt({...newApt, procedure: e.target.value})}
                                 />
                             </div>
                         </div>
 
-                        <div className="flex gap-3 justify-end mt-6">
-                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                            <button onClick={handleSaveAppointment} className="px-6 py-2 bg-cobalt text-white font-bold rounded-lg hover:bg-blue-800">Agendar</button>
+                        <div className="flex gap-3 justify-end mt-8">
+                            <button onClick={() => setShowModal(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors">Cancelar</button>
+                            <button onClick={handleSaveAppointment} className="px-8 py-3 bg-cobalt text-white font-bold rounded-xl hover:bg-blue-800 shadow-lg shadow-cobalt/20 transition-all hover:-translate-y-0.5">Agendar</button>
                         </div>
                     </div>
                 </div>

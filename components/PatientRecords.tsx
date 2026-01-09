@@ -16,15 +16,9 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
   const [aiAdvice, setAiAdvice] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Edit State
   const [editForm, setEditForm] = useState<Patient | null>(null);
-
-  // New Visit State
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [newVisit, setNewVisit] = useState({ procedure: '', notes: '' });
-
-  // Report/Print State
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportConfig, setReportConfig] = useState({
     includeHistory: true,
@@ -32,9 +26,6 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
     includeExams: true,
     includeLabs: true
   });
-
-  // Image Modal State
-  const [viewImageModal, setViewImageModal] = useState<{url: string, analysis: string} | null>(null);
 
   const handlePatientSelect = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -106,22 +97,22 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn h-[calc(100vh-140px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn h-[80vh]">
       {/* Patient List */}
-      <Card title="Pacientes" icon="fa-solid fa-users" className="lg:col-span-1 overflow-hidden flex flex-col h-full">
+      <Card title="Pacientes" icon="fa-solid fa-users" className="lg:col-span-1 overflow-hidden flex flex-col h-full border-gray-200">
         <div className="space-y-2 overflow-y-auto pr-2 no-scrollbar flex-1">
           {patients.map((p) => (
             <div
               key={p.id}
               onClick={() => handlePatientSelect(p)}
-              className={`p-4 rounded-xl cursor-pointer transition-all border ${
+              className={`p-4 rounded-xl cursor-pointer transition-all border group ${
                 selectedPatient?.id === p.id
-                  ? 'bg-cobalt text-white border-cobalt shadow-md'
-                  : 'bg-white border-gray-100 hover:border-cobalt/30 text-gray-700'
+                  ? 'bg-cobalt text-white border-cobalt shadow-lg shadow-cobalt/20'
+                  : 'bg-gray-50 border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm text-gray-700'
               }`}
             >
-              <div className="font-bold">{p.name}</div>
-              <div className={`text-sm ${selectedPatient?.id === p.id ? 'text-blue-100' : 'text-gray-500'}`}>
+              <div className="font-bold text-lg">{p.name}</div>
+              <div className={`text-xs ${selectedPatient?.id === p.id ? 'text-blue-100' : 'text-gray-400 group-hover:text-gray-500'}`}>
                 Última Visita: {p.lastVisit}
               </div>
             </div>
@@ -132,95 +123,103 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
       {/* Details Area */}
       <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
         {selectedPatient ? (
-          <div className="h-full flex flex-col bg-white/60 backdrop-blur rounded-2xl border border-white shadow-sm overflow-hidden">
+          <div className="h-full flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             {/* Header / Tabs */}
-            <div className="p-4 border-b border-gray-200 bg-white/80">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">{selectedPatient.name}</h2>
+            <div className="p-6 border-b border-gray-100 bg-white">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800 tracking-tight">{selectedPatient.name}</h2>
                 <div className="flex gap-2">
                   {!isEditing ? (
-                    <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-cobalt px-3 py-1 border rounded-lg hover:border-cobalt transition-colors">
+                    <button onClick={() => setIsEditing(true)} className="text-gray-600 hover:text-cobalt px-4 py-2 border border-gray-200 rounded-lg hover:border-cobalt transition-colors text-sm font-medium">
                       <i className="fa-solid fa-pen mr-2"></i>Editar
                     </button>
                   ) : (
-                    <button onClick={handleSaveEdit} className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors">
+                    <button onClick={handleSaveEdit} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-bold shadow-lg shadow-green-500/20">
                       <i className="fa-solid fa-check mr-2"></i>Salvar
                     </button>
                   )}
-                  <button onClick={() => setShowVisitModal(true)} className="bg-cobalt text-white px-3 py-1 rounded-lg hover:bg-blue-800 transition-colors">
+                  <button onClick={() => setShowVisitModal(true)} className="bg-cobalt text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors text-sm font-bold shadow-lg shadow-cobalt/20">
                     <i className="fa-solid fa-plus mr-2"></i>Retorno
                   </button>
-                  <button onClick={() => setShowReportModal(true)} className="bg-gray-700 text-white px-3 py-1 rounded-lg hover:bg-gray-800 transition-colors">
-                    <i className="fa-solid fa-print mr-2"></i>Imprimir
+                  <button onClick={() => setShowReportModal(true)} className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors text-sm font-bold">
+                    <i className="fa-solid fa-print mr-2"></i>PDF
                   </button>
                 </div>
               </div>
               
-              <div className="flex gap-4 text-sm font-medium text-gray-500 overflow-x-auto">
-                <button onClick={() => setActiveTab('info')} className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'info' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-700'}`}>Informações Gerais</button>
-                <button onClick={() => setActiveTab('visits')} className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'visits' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-700'}`}>Histórico de Visitas</button>
-                <button onClick={() => setActiveTab('exams')} className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'exams' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-700'}`}>Exames & Imagens</button>
-                <button onClick={() => setActiveTab('labs')} className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'labs' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-700'}`}>Lab Analyzer</button>
+              <div className="flex gap-6 text-sm font-bold text-gray-400 overflow-x-auto border-b border-gray-100 pb-1">
+                <button onClick={() => setActiveTab('info')} className={`pb-3 border-b-2 transition-all whitespace-nowrap ${activeTab === 'info' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-600'}`}>Informações Gerais</button>
+                <button onClick={() => setActiveTab('visits')} className={`pb-3 border-b-2 transition-all whitespace-nowrap ${activeTab === 'visits' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-600'}`}>Histórico de Visitas</button>
+                <button onClick={() => setActiveTab('exams')} className={`pb-3 border-b-2 transition-all whitespace-nowrap ${activeTab === 'exams' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-600'}`}>Exames & Imagens</button>
+                <button onClick={() => setActiveTab('labs')} className={`pb-3 border-b-2 transition-all whitespace-nowrap ${activeTab === 'labs' ? 'border-cobalt text-cobalt' : 'border-transparent hover:text-gray-600'}`}>Lab Analyzer</button>
               </div>
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-gray-50/50">
               {activeTab === 'info' && (
                 <div className="space-y-6 animate-fadeIn">
                   
                   {selectedPatient.audit && (
-                      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 p-3 rounded-lg text-xs text-gray-500 mb-4 font-mono select-none">
-                          <i className="fa-solid fa-lock text-green-600"></i>
+                      <div className="flex items-center gap-3 bg-white border border-green-100 p-4 rounded-xl text-xs text-gray-500 mb-4 shadow-sm">
+                          <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                             <i className="fa-solid fa-shield-halved"></i>
+                          </div>
                           <div>
-                              <p>Assinado Digitalmente por: <strong>{selectedPatient.audit.lastModifiedBy}</strong> em {selectedPatient.audit.lastModifiedAt}</p>
-                              <p className="opacity-50 break-all">Hash: {selectedPatient.audit.signatureHash}</p>
+                              <p className="font-bold text-gray-700">Prontuário Assinado Digitalmente</p>
+                              <p>Por: <strong>{selectedPatient.audit.lastModifiedBy}</strong> em {selectedPatient.audit.lastModifiedAt}</p>
+                              <p className="opacity-50 font-mono mt-1 text-[10px]">Hash: {selectedPatient.audit.signatureHash}</p>
                           </div>
                       </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="text-xs font-bold text-gray-400">Idade</label>
+                  <div className="grid grid-cols-2 gap-6">
+                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                       <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Idade</label>
                        {isEditing ? (
-                         <input type="number" className="w-full border rounded p-1" value={editForm?.age} onChange={(e) => setEditForm({...editForm!, age: parseInt(e.target.value)})} />
-                       ) : <p className="text-lg">{selectedPatient.age} anos</p>}
+                         <input type="number" className="w-full border border-gray-200 rounded-lg p-2 outline-none focus:border-cobalt" value={editForm?.age} onChange={(e) => setEditForm({...editForm!, age: parseInt(e.target.value)})} />
+                       ) : <p className="text-xl font-medium text-gray-800">{selectedPatient.age} anos</p>}
                      </div>
-                     <div>
-                       <label className="text-xs font-bold text-gray-400">CNS</label>
+                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                       <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">CNS</label>
                        {isEditing ? (
-                         <input type="text" className="w-full border rounded p-1" value={editForm?.cns} onChange={(e) => setEditForm({...editForm!, cns: e.target.value})} />
-                       ) : <p className="text-lg">{selectedPatient.cns || '-'}</p>}
+                         <input type="text" className="w-full border border-gray-200 rounded-lg p-2 outline-none focus:border-cobalt" value={editForm?.cns} onChange={(e) => setEditForm({...editForm!, cns: e.target.value})} />
+                       ) : <p className="text-xl font-medium text-gray-800">{selectedPatient.cns || '-'}</p>}
                      </div>
                   </div>
 
-                  <div className="bg-red-50 p-4 rounded-xl border border-red-100">
-                     <label className="text-xs font-bold text-red-500 uppercase">Alertas / Anamnese</label>
+                  <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
+                     <label className="text-xs font-bold text-red-500 uppercase flex items-center gap-2 mb-2">
+                        <i className="fa-solid fa-triangle-exclamation"></i> Alertas de Anamnese
+                     </label>
                      {isEditing ? (
                          <textarea className="w-full border rounded p-2 mt-1" rows={3} value={editForm?.history} onChange={(e) => setEditForm({...editForm!, history: e.target.value})} />
-                     ) : <p className="text-gray-800 mt-1">{selectedPatient.history}</p>}
+                     ) : <p className="text-gray-800 font-medium leading-relaxed">{selectedPatient.history}</p>}
                   </div>
 
                   {selectedPatient.diagnosis && (
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                       <label className="text-xs font-bold text-blue-600 uppercase">Hipótese Diagnóstica (IA)</label>
-                       <div className="prose prose-sm mt-2 max-h-40 overflow-y-auto"><ReactMarkdown>{selectedPatient.diagnosis}</ReactMarkdown></div>
+                    <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+                       <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-10 -mt-10"></div>
+                       <label className="text-xs font-bold text-cobalt uppercase flex items-center gap-2 mb-3 relative z-10">
+                           <i className="fa-solid fa-robot"></i> Diagnóstico Inteligente
+                       </label>
+                       <div className="prose prose-sm prose-blue max-w-none relative z-10 text-gray-600"><ReactMarkdown>{selectedPatient.diagnosis}</ReactMarkdown></div>
                     </div>
                   )}
 
                   <button
                     onClick={handleAiAssist}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-cobalt to-blue-500 text-white px-6 py-3 rounded-xl font-medium shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-cobalt to-blue-600 text-white px-6 py-4 rounded-xl font-bold shadow-xl shadow-blue-900/10 flex items-center justify-center gap-3 hover:scale-[1.01] transition-transform"
                   >
-                    {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-robot"></i>}
+                    {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
                     IA Assist: Gerar Protocolo Farmacológico
                   </button>
                   
                   {aiAdvice && (
-                    <div className="bg-white border border-blue-200 p-4 rounded-xl shadow-sm animate-slideUp">
-                       <h4 className="text-cobalt font-bold mb-2">Sugestão Farmacológica</h4>
-                       <div className="prose prose-sm prose-blue max-w-none">
+                    <div className="bg-white border-l-4 border-cobalt p-6 rounded-r-xl shadow-md animate-slideUp">
+                       <h4 className="text-cobalt font-bold mb-3">Sugestão Farmacológica</h4>
+                       <div className="prose prose-sm prose-gray max-w-none">
                          <ReactMarkdown>{aiAdvice}</ReactMarkdown>
                        </div>
                     </div>
@@ -230,16 +229,16 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
 
               {activeTab === 'visits' && (
                 <div className="space-y-4 animate-fadeIn">
-                   {selectedPatient.visits.length === 0 && <p className="text-gray-400 text-center py-10">Nenhum registro de visita.</p>}
+                   {selectedPatient.visits.length === 0 && <p className="text-gray-400 text-center py-10 italic">Nenhum registro de visita.</p>}
                    {selectedPatient.visits.map((visit) => (
-                     <div key={visit.id} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-md transition-shadow relative pl-10">
-                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-cobalt rounded-l-xl"></div>
-                        <div className="absolute left-4 top-4 w-3 h-3 bg-white border-2 border-cobalt rounded-full"></div>
+                     <div key={visit.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative pl-10">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-cobalt my-4 rounded-r-full"></div>
+                        <div className="absolute left-3 top-6 w-3 h-3 bg-white border-2 border-cobalt rounded-full"></div>
                         <div className="flex justify-between mb-2">
-                           <span className="font-bold text-gray-800">{visit.procedure}</span>
-                           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{visit.date}</span>
+                           <span className="font-bold text-gray-800 text-lg">{visit.procedure}</span>
+                           <span className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full font-medium">{visit.date}</span>
                         </div>
-                        <p className="text-gray-600 text-sm">{visit.notes}</p>
+                        <p className="text-gray-600 leading-relaxed">{visit.notes}</p>
                      </div>
                    ))}
                 </div>
@@ -248,44 +247,39 @@ export const PatientRecords: React.FC<PatientRecordsProps> = ({ patients, onUpda
             </div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <i className="fa-solid fa-user-plus text-5xl mb-4 opacity-50"></i>
-              <p>Selecione um paciente para ver detalhes</p>
-            </div>
+          <div className="h-full flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+            <i className="fa-solid fa-folder-open text-6xl mb-4 text-gray-200"></i>
+            <p className="font-medium text-lg">Selecione um paciente para ver o prontuário</p>
           </div>
         )}
       </div>
 
-      {/* New Visit Modal... (Kept as is) */}
-      
       {/* Report Generator Modal */}
       {showReportModal && selectedPatient && (
           <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
-             <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl">
-                 <h3 className="text-xl font-bold text-gray-800 mb-2">Gerar Relatório / Prontuário</h3>
-                 <p className="text-sm text-gray-500 mb-4">Selecione os dados para incluir no documento PDF/Impressão.</p>
+             <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
+                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Gerar Documento</h3>
+                 <p className="text-gray-500 mb-6">Selecione os dados para incluir no relatório.</p>
                  
-                 {/* ...Checkboxes... */}
-                 <div className="space-y-3 mb-6">
-                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="checkbox" checked={reportConfig.includeHistory} onChange={() => setReportConfig({...reportConfig, includeHistory: !reportConfig.includeHistory})} className="w-5 h-5 text-cobalt rounded" />
-                        <span className="text-gray-700 font-medium">Histórico / Anamnese</span>
+                 <div className="space-y-3 mb-8">
+                    <label className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                        <input type="checkbox" checked={reportConfig.includeHistory} onChange={() => setReportConfig({...reportConfig, includeHistory: !reportConfig.includeHistory})} className="w-5 h-5 text-cobalt rounded accent-cobalt" />
+                        <span className="text-gray-700 font-bold">Histórico / Anamnese</span>
                     </label>
-                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="checkbox" checked={reportConfig.includeVisits} onChange={() => setReportConfig({...reportConfig, includeVisits: !reportConfig.includeVisits})} className="w-5 h-5 text-cobalt rounded" />
-                        <span className="text-gray-700 font-medium">Histórico de Visitas</span>
+                    <label className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                        <input type="checkbox" checked={reportConfig.includeVisits} onChange={() => setReportConfig({...reportConfig, includeVisits: !reportConfig.includeVisits})} className="w-5 h-5 text-cobalt rounded accent-cobalt" />
+                        <span className="text-gray-700 font-bold">Histórico de Visitas</span>
                     </label>
                  </div>
 
                  <div className="flex justify-end gap-3">
-                     <button onClick={() => setShowReportModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                     <button onClick={handlePrint} className="px-6 py-2 bg-cobalt text-white font-bold rounded-lg hover:bg-blue-800 shadow-lg shadow-cobalt/20">
-                        <i className="fa-solid fa-print mr-2"></i> Imprimir / Salvar PDF
+                     <button onClick={() => setShowReportModal(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-medium">Cancelar</button>
+                     <button onClick={handlePrint} className="px-8 py-3 bg-cobalt text-white font-bold rounded-xl hover:bg-blue-800 shadow-lg shadow-cobalt/20">
+                        <i className="fa-solid fa-print mr-2"></i> Imprimir
                      </button>
                  </div>
 
-                 {/* HIDDEN HIGH-FIDELITY PRINT LAYOUT */}
+                 {/* PRINT LAYOUT (Hidden) */}
                  <div id="printable-report" className="hidden">
                     <div className="max-w-[210mm] mx-auto p-12 font-sans bg-white relative">
                         {/* Professional Header */}

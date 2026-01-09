@@ -76,7 +76,7 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn h-[calc(100vh-100px)] overflow-y-auto no-scrollbar pb-10">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-10">
       
       <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
         {renderTabButton('hematology', 'Hematologia', 'fa-droplet')}
@@ -88,17 +88,17 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
       <Card title="Entrada de Exames Laboratoriais" icon="fa-solid fa-file-medical">
         
         {/* Patient Selector */}
-        <div className="mb-6 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-           <label className="block text-sm font-bold text-gray-700 mb-1">Vincular Paciente</label>
+        <div className="mb-6 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+           <label className="block text-sm font-bold text-gray-700 mb-2">Vincular Paciente (Opcional)</label>
            <div className="flex gap-2">
              <div className="relative flex-1">
-               <i className="fa-solid fa-user absolute left-3 top-3 text-gray-400"></i>
+               <i className="fa-solid fa-user absolute left-3 top-3.5 text-gray-400"></i>
                <select 
                  value={selectedPatientId}
                  onChange={(e) => setSelectedPatientId(e.target.value)}
-                 className="w-full pl-10 p-2 border border-gray-300 rounded-lg focus:border-cobalt outline-none bg-white"
+                 className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:border-cobalt outline-none bg-white"
                >
-                 <option value="">Não vincular a paciente (Apenas análise)</option>
+                 <option value="">Apenas análise rápida (Sem vínculo)</option>
                  {patients.map(p => (
                    <option key={p.id} value={p.id}>{p.name} (CNS: {p.cns || 'N/A'})</option>
                  ))}
@@ -106,10 +106,10 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
              </div>
            </div>
            {pendingExams.length > 0 && (
-             <div className="mt-2 flex flex-wrap gap-2 animate-fadeIn">
-                <span className="text-xs font-bold text-blue-700 self-center">Solicitados:</span>
+             <div className="mt-4 flex flex-wrap gap-2 animate-fadeIn bg-white p-3 rounded-lg border border-blue-100">
+                <span className="text-xs font-bold text-blue-700 self-center">Pendentes no Prontuário:</span>
                 {pendingExams.map((e, idx) => (
-                  <span key={idx} className="bg-white text-blue-600 px-2 py-1 rounded border border-blue-200 text-xs shadow-sm capitalize">{e}</span>
+                  <span key={idx} className="bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 text-xs shadow-sm capitalize">{e}</span>
                 ))}
              </div>
            )}
@@ -117,7 +117,7 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
 
         <div className="min-h-[300px]">
           {activeTab === 'hematology' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
               <InputGroup label="Eritrócitos (milhões/mm³)" name="erythrocytes" value={labData.erythrocytes} onChange={handleChange} ph="4.5" highlight={isPending('hemograma')} />
               <InputGroup label="Hemoglobina (g/dL)" name="hemoglobin" value={labData.hemoglobin} onChange={handleChange} ph="13.5" highlight={isPending('hemograma')} />
               <InputGroup label="Hematócrito (%)" name="hematocrit" value={labData.hematocrit} onChange={handleChange} ph="40" highlight={isPending('hemograma')} />
@@ -127,7 +127,7 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
           )}
 
           {activeTab === 'biochemistry' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
               <InputGroup label="Glicemia Jejum (mg/dL)" name="glucose" value={labData.glucose} onChange={handleChange} ph="90" highlight={isPending('glicemia')} />
               <InputGroup label="Hemoglobina Glicada (%)" name="hba1c" value={labData.hba1c} onChange={handleChange} ph="5.5" highlight={isPending('glicemia')} />
               <InputGroup label="Ureia (mg/dL)" name="urea" value={labData.urea} onChange={handleChange} ph="30" />
@@ -136,40 +136,40 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
           )}
 
           {activeTab === 'coagulation' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
               <InputGroup label="TAP / INR" name="tap_inr" value={labData.tap_inr} onChange={handleChange} ph="1.0" highlight={isPending('coagulograma')} />
               <InputGroup label="TTPA (segundos)" name="ttpa" value={labData.ttpa} onChange={handleChange} ph="30" highlight={isPending('coagulograma')} />
             </div>
           )}
 
           {activeTab === 'others' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
               <InputGroup label="Cálcio (mg/dL)" name="calcium" value={labData.calcium} onChange={handleChange} ph="9.5" />
               <InputGroup label="Vitamina D (ng/mL)" name="vitamin_d" value={labData.vitamin_d} onChange={handleChange} ph="30" />
             </div>
           )}
         </div>
         
-        <div className="mt-8 pt-4 border-t border-gray-100">
+        <div className="mt-8 pt-6 border-t border-gray-100">
           <button
             onClick={handleAnalyze}
             disabled={loading}
-            className="w-full bg-cobalt text-white py-3 rounded-xl font-bold shadow-lg shadow-cobalt/20 hover:bg-blue-800 transition-all flex justify-center items-center gap-2"
+            className="w-full bg-cobalt text-white py-4 rounded-xl font-bold shadow-lg shadow-cobalt/20 hover:bg-blue-800 transition-all flex justify-center items-center gap-3 hover:-translate-y-0.5"
           >
             {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-microscope"></i>}
-            Processar Análise Cruzada (IA)
+            Processar Análise Cruzada com IA
           </button>
         </div>
       </Card>
 
       {result && (
-        <Card title="Análise de Risco & Protocolos" icon="fa-solid fa-clipboard-check" className="border-l-4 border-l-cobalt mb-10">
+        <Card title="Análise de Risco & Protocolos" icon="fa-solid fa-clipboard-check" className="border-l-4 border-l-cobalt mb-10 shadow-xl">
           <div className="prose prose-blue max-w-none">
             <ReactMarkdown>{result}</ReactMarkdown>
           </div>
           
           {selectedPatientId && (
-            <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="mt-8 pt-4 border-t border-gray-100">
                <button 
                  onClick={handleSave}
                  className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20"
@@ -185,7 +185,7 @@ export const LabAnalyzer: React.FC<LabProps> = ({ patients = [], onSaveToRecord 
 };
 
 const InputGroup = ({ label, name, value, onChange, ph, highlight }: any) => (
-  <div className="space-y-1 relative">
+  <div className="space-y-2 relative">
     <label className={`text-xs font-bold uppercase flex justify-between ${highlight ? 'text-cobalt' : 'text-gray-500'}`}>
         {label}
         {highlight && <i className="fa-solid fa-star text-yellow-400 animate-pulse" title="Solicitado na Anamnese"></i>}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header'; // New Header
+import { LandingPage } from './components/LandingPage'; // New Landing Page
 import { VisionDiagnostic } from './components/VisionDiagnostic';
 import { LabAnalyzer } from './components/LabAnalyzer';
 import { PatientRecords } from './components/PatientRecords';
@@ -14,26 +15,27 @@ import { ViewType, Patient, LabData, Notification, User, Appointment, ClinicProf
 import { AnimatePresence, motion } from 'framer-motion';
 import { MOCK_PATIENTS } from './constants';
 
-// Internal component for dashboard navigation cards
-const DashboardCard = ({ icon, label, onClick }: { icon: string, label: string, onClick: () => void }) => (
+const DashboardCard = ({ icon, label, desc, onClick }: { icon: string, label: string, desc?: string, onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-cobalt transition-all group flex flex-col items-center gap-3 h-40 justify-center"
+    className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-cobalt transition-all group flex flex-col items-start gap-4 h-full text-left relative overflow-hidden"
   >
-    <div className="w-14 h-14 bg-blue-50 text-cobalt rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">
+    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+    <div className="w-14 h-14 bg-white border border-gray-100 text-cobalt rounded-2xl flex items-center justify-center text-2xl group-hover:bg-cobalt group-hover:text-white transition-colors shadow-sm z-10">
       <i className={`fa-solid ${icon}`}></i>
     </div>
-    <span className="font-bold text-gray-700 group-hover:text-cobalt text-sm uppercase tracking-wide text-center">{label}</span>
+    <div className="z-10">
+      <span className="font-bold text-gray-800 text-lg group-hover:text-cobalt transition-colors block mb-1">{label}</span>
+      {desc && <span className="text-sm text-gray-500 font-normal leading-tight">{desc}</span>}
+    </div>
   </button>
 );
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // State: 'landing' | 'login' | 'app'
+  const [appState, setAppState] = useState<'landing' | 'login' | 'app'>('landing');
   
-  // App Data State
-  // Initialize empty or with mock data if preferred. 
-  // We start empty to demonstrate the "Create Central Account" feature if desired, 
-  // OR we can keep the mock users but allow adding more.
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([
     { id: '1', name: 'Dr. Silva (Admin)', role: 'ADMIN', email: 'admin@odontoai.com', pin: '1234' },
     { id: '2', name: 'Recepção', role: 'RECEPTIONIST', email: 'recepcao@odontoai.com', pin: '0000' }
@@ -53,26 +55,21 @@ const App: React.FC = () => {
   ]);
 
   const [currentView, setCurrentView] = useState<ViewType>(ViewType.DASHBOARD);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS.map(p => ({ ...p, labAnalyses: [] })));
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // --- Handlers ---
 
   const handleSetupAdmin = (user: User) => {
       setUsers([user]);
       setCurrentUser(user);
+      setAppState('app');
       setCurrentView(ViewType.DASHBOARD);
   };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    setAppState('app');
     if (user.role === 'RECEPTIONIST') {
         setCurrentView(ViewType.AGENDA);
     } else {
@@ -82,19 +79,13 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setAppState('landing'); // Go back to website home
   }
 
-  const handleAddUser = (user: User) => {
-    setUsers([...users, user]);
-  }
+  const handleAddUser = (user: User) => setUsers([...users, user]);
+  const handleDeleteUser = (id: string) => setUsers(users.filter(u => u.id !== id));
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter(u => u.id !== id));
-  }
-
-  // --- Notification Logic ---
   const notifyAdmin = (title: string, message: string) => {
-     // If the current user is NOT admin, we create a notification that the Admin will see when they login/check dashboard
      const newNotif: Notification = {
          id: Date.now().toString(),
          title: title,
@@ -107,18 +98,11 @@ const App: React.FC = () => {
 
   const handleAddPatient = (newPatient: Patient) => {
     setPatients([newPatient, ...patients]);
-    
-    // Logic: If Receptionist adds patient, notify Admin
     if (currentUser?.role === 'RECEPTIONIST') {
         notifyAdmin('Novo Paciente Cadastrado', `Recepção cadastrou ${newPatient.name}.`);
         alert("Pré-cadastro realizado! O Doutor foi notificado.");
         setCurrentView(ViewType.AGENDA);
-    } else if (currentUser?.role === 'DOCTOR') {
-        // Integrated Doctor added patient
-        notifyAdmin('Paciente Cadastrado', `${currentUser.name} cadastrou ${newPatient.name}.`);
-        setCurrentView(ViewType.PATIENT_RECORDS);
     } else {
-        // Admin added
         setCurrentView(ViewType.PATIENT_RECORDS);
     }
   };
@@ -129,17 +113,12 @@ const App: React.FC = () => {
 
   const handleAddAppointment = (apt: Appointment) => {
     setAppointments([...appointments, apt]);
-    if (currentUser?.role !== 'ADMIN') {
-        notifyAdmin('Novo Agendamento', `${currentUser?.name} agendou ${apt.patientName} para ${apt.time}.`);
-    }
+    if (currentUser?.role !== 'ADMIN') notifyAdmin('Novo Agendamento', `${currentUser?.name} agendou ${apt.patientName}.`);
   }
 
   const handleUpdateAppointment = (apt: Appointment) => {
     setAppointments(appointments.map(a => a.id === apt.id ? apt : a));
-    // Check if status changed to waiting (Receptionist action)
-    if (apt.status === 'waiting' && currentUser?.role === 'RECEPTIONIST') {
-        notifyAdmin('Paciente na Recepção', `${apt.patientName} chegou para atendimento.`);
-    }
+    if (apt.status === 'waiting' && currentUser?.role === 'RECEPTIONIST') notifyAdmin('Paciente na Recepção', `${apt.patientName} chegou.`);
   }
 
   const handleSaveImageToRecord = (patientId: string, imageUrl: string, analysis: string) => {
@@ -149,9 +128,7 @@ const App: React.FC = () => {
         ...patient,
         images: [{ id: Date.now().toString(), date: new Date().toLocaleDateString('pt-BR'), imageUrl, analysis }, ...patient.images]
       });
-      if (currentUser?.role === 'DOCTOR') {
-          notifyAdmin('Exame Adicionado', `${currentUser.name} salvou uma análise de imagem para ${patient.name}.`);
-      }
+      if (currentUser?.role === 'DOCTOR') notifyAdmin('Exame Adicionado', `${currentUser.name} salvou uma análise.`);
     }
   };
 
@@ -168,12 +145,24 @@ const App: React.FC = () => {
   const handleAddNotification = (n: Notification) => setNotifications(prev => [n, ...prev]);
   const removeNotification = (id: string) => setNotifications(notifications.filter(n => n.id !== id));
 
-  if (!currentUser) {
-    return <Login users={users} onLogin={handleLogin} onSetupAdmin={handleSetupAdmin} />;
+  // --- Views Renders ---
+
+  if (appState === 'landing') {
+      return <LandingPage onLoginClick={() => setAppState('login')} />;
+  }
+
+  if (appState === 'login') {
+      return (
+          <div className="relative">
+              <button onClick={() => setAppState('landing')} className="absolute top-6 left-6 text-gray-500 hover:text-cobalt flex items-center gap-2 z-50">
+                  <i className="fa-solid fa-arrow-left"></i> Voltar ao Site
+              </button>
+              <Login users={users} onLogin={handleLogin} onSetupAdmin={handleSetupAdmin} />
+          </div>
+      );
   }
 
   const renderContent = () => {
-    // Shared Props
     const agendaProps = {
         patients,
         appointments,
@@ -184,107 +173,59 @@ const App: React.FC = () => {
         clinicSettings
     };
 
-    if (currentUser.role === 'RECEPTIONIST') {
-        // Limited View for Receptionist
-        if (currentView === ViewType.ANAMNESIS) {
-             return <Anamnesis onSavePatient={handleAddPatient} currentUser={currentUser.name} />;
-        }
-        // Default to Agenda
+    // Receptionist logic
+    if (currentUser?.role === 'RECEPTIONIST') {
+        if (currentView === ViewType.ANAMNESIS) return <Anamnesis onSavePatient={handleAddPatient} currentUser={currentUser.name} />;
         return <Agenda {...agendaProps} isReceptionist={true} />;
     }
 
     switch (currentView) {
-      case ViewType.AGENDA:
-        return <Agenda {...agendaProps} />;
-      case ViewType.ANAMNESIS: 
-        return <Anamnesis onSavePatient={handleAddPatient} currentUser={currentUser.name} />;
-      case ViewType.VISION_DIAGNOSTIC: 
-        return <VisionDiagnostic patients={patients} onSaveToRecord={handleSaveImageToRecord} />;
-      case ViewType.LAB_ANALYZER: 
-        return <LabAnalyzer patients={patients} onSaveToRecord={handleSaveLabToRecord} />;
-      case ViewType.PATIENT_RECORDS: 
-        return <PatientRecords patients={patients} onUpdatePatient={handleUpdatePatient} clinicSettings={clinicSettings} />;
-      case ViewType.VOICE_STUDY: 
-        return <VoiceStudyHub />;
-      case ViewType.SIMULATOR: 
-        return <PatientSimulator />;
-      case ViewType.SALES_ENGINE: 
-        return <SalesEngine />;
-      case ViewType.SETTINGS:
-        return <Settings 
-            clinicProfile={clinicSettings} 
-            onUpdateProfile={setClinicSettings}
-            users={users}
-            onAddUser={handleAddUser}
-            onDeleteUser={handleDeleteUser}
-            currentUserRole={currentUser.role}
-        />;
+      case ViewType.AGENDA: return <Agenda {...agendaProps} />;
+      case ViewType.ANAMNESIS: return <Anamnesis onSavePatient={handleAddPatient} currentUser={currentUser?.name} />;
+      case ViewType.VISION_DIAGNOSTIC: return <VisionDiagnostic patients={patients} onSaveToRecord={handleSaveImageToRecord} />;
+      case ViewType.LAB_ANALYZER: return <LabAnalyzer patients={patients} onSaveToRecord={handleSaveLabToRecord} />;
+      case ViewType.PATIENT_RECORDS: return <PatientRecords patients={patients} onUpdatePatient={handleUpdatePatient} clinicSettings={clinicSettings} />;
+      case ViewType.VOICE_STUDY: return <VoiceStudyHub />;
+      case ViewType.SIMULATOR: return <PatientSimulator />;
+      case ViewType.SALES_ENGINE: return <SalesEngine />;
+      case ViewType.SETTINGS: return <Settings clinicProfile={clinicSettings} onUpdateProfile={setClinicSettings} users={users} onAddUser={handleAddUser} onDeleteUser={handleDeleteUser} currentUserRole={currentUser!.role} />;
       default:
         return (
-          <div className="text-center mt-10 animate-fadeIn">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {currentUser.name}</h2>
-            <p className="text-gray-500 mb-8">{clinicSettings.clinicName}</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 max-w-5xl mx-auto">
-                <DashboardCard icon="fa-calendar-days" label="Agenda do Dia" onClick={() => setCurrentView(ViewType.AGENDA)} />
-                <DashboardCard icon="fa-clipboard-user" label="Nova Anamnese" onClick={() => setCurrentView(ViewType.ANAMNESIS)} />
-                <DashboardCard icon="fa-eye" label="Diagnóstico RX" onClick={() => setCurrentView(ViewType.VISION_DIAGNOSTIC)} />
-                <DashboardCard icon="fa-comments-dollar" label="Smart Sales" onClick={() => setCurrentView(ViewType.SALES_ENGINE)} />
-            </div>
-
-            {/* Notifications Panel - Only Admin/Main Doctor sees alerts from others */}
-            {currentUser.role === 'ADMIN' && notifications.length > 0 && (
-                <div className="max-w-md mx-auto mt-12 text-left bg-white p-4 rounded-xl border border-gray-100 shadow-sm animate-slideUp">
-                    <div className="flex justify-between items-center mb-3 border-b pb-2">
-                         <h3 className="text-sm font-bold text-gray-400 uppercase">Central de Notificações</h3>
-                         <button onClick={() => setNotifications([])} className="text-xs text-cobalt hover:underline">Limpar tudo</button>
-                    </div>
-                    {notifications.map(n => (
-                        <div key={n.id} className="flex justify-between items-start mb-3 last:mb-0 border-l-2 border-cobalt pl-3 py-1 hover:bg-gray-50 rounded-r transition-colors">
-                            <div>
-                                <p className="font-bold text-gray-800 text-sm">{n.title}</p>
-                                <p className="text-xs text-gray-500">{n.message}</p>
-                            </div>
-                            <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">{n.time}</span>
-                        </div>
-                    ))}
+          <div className="mt-6 animate-fadeIn pb-20">
+            <div className="bg-gradient-to-r from-cobalt to-blue-600 rounded-3xl p-10 text-white mb-10 shadow-xl shadow-blue-900/20 relative overflow-hidden">
+                <div className="relative z-10">
+                    <h2 className="text-4xl font-bold mb-2">Bem-vindo, {currentUser?.name}</h2>
+                    <p className="opacity-90 text-lg">{clinicSettings.clinicName} • Painel de Controle</p>
                 </div>
-            )}
+                <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
+                    <i className="fa-solid fa-tooth text-9xl"></i>
+                </div>
+            </div>
+            
+            <h3 className="text-xl font-bold text-gray-800 mb-6 pl-2">Acesso Rápido</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                <DashboardCard icon="fa-calendar-days" label="Agenda Clínica" desc="Gerencie consultas e horários" onClick={() => setCurrentView(ViewType.AGENDA)} />
+                <DashboardCard icon="fa-clipboard-user" label="Nova Anamnese" desc="Cadastro e entrevista inicial" onClick={() => setCurrentView(ViewType.ANAMNESIS)} />
+                <DashboardCard icon="fa-eye" label="Vision AI" desc="Análise radiográfica inteligente" onClick={() => setCurrentView(ViewType.VISION_DIAGNOSTIC)} />
+                <DashboardCard icon="fa-comments-dollar" label="Smart Sales" desc="Scripts de vendas personalizados" onClick={() => setCurrentView(ViewType.SALES_ENGINE)} />
+            </div>
           </div>
         );
     }
   };
 
   return (
-    <div className="flex h-screen bg-ice overflow-hidden">
-      <Sidebar 
-        currentView={currentView} 
-        onChangeView={setCurrentView} 
-        currentUser={currentUser} 
-        onLogout={handleLogout}
-      />
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {currentUser && (
+         <Header 
+            currentView={currentView} 
+            onChangeView={setCurrentView} 
+            currentUser={currentUser} 
+            onLogout={handleLogout}
+         />
+      )}
       
-      <main className="flex-1 flex flex-col relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-white to-transparent opacity-60 pointer-events-none"></div>
-        
-        <div className="z-20 px-8 py-4 flex justify-between items-center">
-            <div className="text-xs font-medium text-gray-400 bg-white/50 backdrop-blur px-3 py-1 rounded-full border border-gray-100">
-                {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </div>
-            <div className="flex items-center gap-4">
-                 <div className="text-right">
-                     <p className="text-sm font-bold text-gray-700">{currentUser.name}</p>
-                     <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-                        {currentUser.role === 'ADMIN' ? 'Conta Central' : currentUser.role === 'DOCTOR' ? 'Dentista' : 'Recepção'}
-                     </p>
-                 </div>
-                 <div className="text-xl font-bold text-cobalt bg-white/50 backdrop-blur px-4 py-1 rounded-full border border-blue-100 shadow-sm">
-                    {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })} <span className="text-xs font-normal text-gray-400 ml-1">BRT</span>
-                </div>
-            </div>
-        </div>
-        
-        <div className="flex-1 px-8 pb-8 overflow-y-auto z-10">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -292,45 +233,40 @@ const App: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="h-full"
             >
               {renderContent()}
             </motion.div>
           </AnimatePresence>
-        </div>
-
-        {/* Real-time Popups for Admin */}
-        {currentUser.role === 'ADMIN' && (
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
-                <AnimatePresence>
-                    {notifications.slice(0, 3).map((notif) => (
-                        <motion.div 
-                            key={notif.id}
-                            initial={{ opacity: 0, x: 50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 50 }}
-                            className="bg-white border-l-4 border-cobalt p-4 rounded-lg shadow-2xl flex items-start gap-3 w-80 relative"
-                        >
-                            <div className="bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center text-cobalt flex-shrink-0">
-                                <i className="fa-solid fa-bell"></i>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-800 text-sm">{notif.title}</h4>
-                                <p className="text-xs text-gray-600">{notif.message}</p>
-                                <span className="text-[10px] text-gray-400 mt-1 block">{notif.time}</span>
-                            </div>
-                            <button 
-                                onClick={() => removeNotification(notif.id)}
-                                className="absolute top-2 right-2 text-gray-300 hover:text-red-400"
-                            >
-                                <i className="fa-solid fa-xmark"></i>
-                            </button>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
-        )}
       </main>
+
+      {/* Notifications Toast */}
+      {currentUser?.role === 'ADMIN' && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+            <AnimatePresence>
+                {notifications.slice(0, 3).map((notif) => (
+                    <motion.div 
+                        key={notif.id}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50 }}
+                        className="bg-white border-l-4 border-cobalt p-4 rounded-lg shadow-2xl flex items-start gap-3 w-80 relative pointer-events-auto"
+                    >
+                        <div className="bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center text-cobalt flex-shrink-0">
+                            <i className="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-gray-800 text-sm">{notif.title}</h4>
+                            <p className="text-xs text-gray-600">{notif.message}</p>
+                            <span className="text-[10px] text-gray-400 mt-1 block">{notif.time}</span>
+                        </div>
+                        <button onClick={() => removeNotification(notif.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-400">
+                            <i className="fa-solid fa-xmark"></i>
+                        </button>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };
