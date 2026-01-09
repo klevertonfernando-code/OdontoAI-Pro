@@ -1,0 +1,7 @@
+{
+  "name": "OdontoAI Pro",
+  "description": "Advanced Dental Intelligence SaaS featuring Vision Diagnostics, Lab Analysis, and AI-driven Patient Management.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
